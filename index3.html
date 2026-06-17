@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Order Management System</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #16a085;
+            --accent: #2980b9;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --light: #f8f9fa;
+            --dark: #34495e;
+            --gray: #7f8c8d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f3f4;
+            color: var(--dark);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        header h1 { font-size: 1.5rem; }
+        header p { font-size: 0.85rem; opacity: 0.8; margin-top: 2px; }
+        
+        button {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover { background: #138d75; }
+        button.btn-danger { background: var(--danger); }
+        button.btn-danger:hover { background: #c0392b; }
+        
+        .app-wrapper {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+        }
+
+        /* 5-Feature Sidebar */
+        .sidebar {
+            background: #ffffff;
+            border-bottom: 1px solid #ddd;
+            padding: 10px;
+        }
+
+        .menu-list {
+            list-style: none;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .menu-item {
+            padding: 10px 14px;
+            background: var(--light);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            color: var(--dark);
+            border: 1px solid #e0e0e0;
+            transition: all 0.2s ease;
+            flex: 1;
+            text-align: center;
+        }
+
+        .menu-item.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        /* Content Viewport */
+        .content-area {
+            padding: 20px;
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .feature-panel {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .feature-panel.active { display: block; }
+        .feature-panel h2 {
+            font-size: 1.3rem;
+            color: var(--primary);
+            border-bottom: 2px solid var(--light);
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+
+        .sub-category-bar {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .sub-tab {
+            padding: 5px 12px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .sub-tab.active { background: var(--primary); color: white; }
+
+        /* Dynamic Visual Color Grid for Tables */
+        .table-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        .table-btn {
+            padding: 15px 5px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            font-size: 1rem;
+            transition: transform 0.1s, outline 0.1s;
+        }
+        .table-free { background: var(--success); }
+        .table-occupied { background: var(--danger); }
+        
+        /* Highlight focus style rule when clicked */
+        .table-selected { 
+            outline: 4px solid #3498db !important; 
+            outline-offset: 2px;
+            transform: scale(1.02); 
+        }
+
+        /* Forms, inputs, logs formatting */
+        label { display: block; margin: 10px 0 5px; font-weight: 600; font-size: 0.9rem; }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+        .flex-group { display: flex; gap: 10px; }
+        .flex-group * { flex: 1; }
+
+        button {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover { opacity: 0.9; }
+        button.btn-danger { background: var(--danger); }
+
+        .responsive-table { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: var(--light); color: var(--gray); }
+
+        .receipt-box {
+            background: #fff8dc;
+            border: 1px dashed #999;
+            font-family: monospace;
+            padding: 15px;
+            white-space: pre-wrap;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        @media (min-width: 768px) {
+            .sidebar { border-bottom: none; border-right: 1px solid #ddd; width: 280px; }
+            .menu-list { flex-direction: column; overflow-x: visible; }
+            .app-wrapper { flex-direction: row; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>ក្រុមកូនទី ៥: Restaurant Order Management System</h1>
+    <p>5 Assignment Core Features Navigation Menu</p>
+</header>
+
+<div class="app-wrapper">
+    <nav class="sidebar">
+        <ul class="menu-list">
+            <li class="menu-item active" onclick="switchFeature(1)">1. គ្រប់គ្រង Menu</li>
+            <li class="menu-item" onclick="switchFeature(2)">2. ទទួល Order / គណនាថ្លៃ</li>
+            <li class="menu-item" onclick="switchFeature(3)">3. ប្រព័ន្ធ Discount / Coupon</li>
+            <li class="menu-item" onclick="switchFeature(4)">4. រក្សាប្រវត្តិ Transaction</li>
+            <li class="menu-item" onclick="switchFeature(5)">5. របាយការណ៍ប្រចាំថ្ងៃ/ខែ</li>
+        </ul>
+    </nav>
+
+    <main class="content-area">
+
+        <div id="feature-1" class="feature-panel active">
+            <h2>Feature 1: គ្រប់គ្រង Menu (បន្ថែម / លុប / កែ)</h2>
+            <div class="sub-category-bar" id="mgmt-sub-tabs"></div>
+            <div class="responsive-table">
+                <table>
+                    <thead><tr><th>ID</th><th>Name</th><th>Price</th><th>Action</th></tr></thead>
+                    <tbody id="menu-tbody"></tbody>
+                </table>
+            </div>
+            <hr style="margin:20px 0; border:0; border-top:1px solid #ddd;">
+            <h3>Add New Item</h3>
+            <label>Category:</label>
+            <select id="new-item-category">
+                <option value="Food">Food (ម្ហូប)</option>
+                <option value="Drinks">Drinks (ភេសជ្ជៈ)</option>
+                <option value="Desserts">Desserts (បង្អែម)</option>
+            </select>
+            <div class="flex-group">
+                <input type="text" id="new-item-id" placeholder="ID (e.g. M5)">
+                <input type="text" id="new-item-name" placeholder="Item Name">
+                <input type="number" id="new-item-price" step="0.01" placeholder="Price ($)">
+            </div>
+            <button onclick="addMenuItem()">Add Item to System Registry</button>
+        </div>
+
+        <div id="feature-2" class="feature-panel">
+            <h2>Feature 2: ទទួល Order / គណនាថ្លៃ</h2>
+            <label>Select Table:</label>
+            <div class="table-grid" id="tables-container"></div>
+            <h4 id="order-status-text" style="color: var(--secondary); margin-bottom: 10px;">Select an operational table button above to view statement states.</h4>
+            
+            <div id="order-actions" style="display: none;">
+                <div class="sub-category-bar" id="order-sub-tabs"></div>
+                <label>Select Item:</label>
+                <select id="menu-item-select"></select>
+                <label>Quantity:</label>
+                <input type="number" id="item-qty" value="1" min="1">
+                <button onclick="addItemToOrder()">+ Add Item to Current Order</button>
+                
+                <h3 style="margin-top:20px;">Live Running Statement Calculation</h3>
+                <div id="live-receipt-view" class="receipt-box"></div>
+                <button class="btn-danger" style="margin-top:15px;" onclick="checkoutTable()">Checkout & Print Receipt</button>
+            </div>
+        </div>
+
+        <div id="feature-3" class="feature-panel">
+            <h2>Feature 3: ប្រព័ន្ធ Discount / Coupon</h2>
+            <div class="responsive-table">
+                <table>
+                    <thead><tr><th>Coupon Code</th><th>Discount Value</th></tr></thead>
+                    <tbody id="coupon-tbody"></tbody>
+                </table>
+            </div>
+            <hr style="margin:20px 0; border:0; border-top:1px solid #ddd;">
+            <h3>Apply Coupon to an Occupied Table</h3>
+            <label>Active Table Target:</label>
+            <select id="coupon-table-select"></select>
+            <label>Enter Coupon Code String:</label>
+            <div class="flex-group">
+                <input type="text" id="coupon-code-input" placeholder="e.g. WELCOME10">
+                <button style="width:auto;" onclick="applyCouponToTable()">Apply Code</button>
+            </div>
+        </div>
+
+        <div id="feature-4" class="feature-panel">
+            <h2>Feature 4: រក្សាប្រវត្តិ Transaction (orders.txt simulation)</h2>
+            <div id="orders-file-view" class="receipt-box" style="background:#fafafa; max-height:400px; overflow-y:scroll;"></div>
+            <button class="btn-danger" style="margin-top:15px; width:auto;" onclick="clearFile('orders')">Format System orders.txt</button>
+        </div>
+
+        <div id="feature-5" class="feature-panel">
+            <h2>Feature 5: របាយការណ៍ប្រចាំថ្ងៃ / ខែ (daily_report.txt simulation)</h2>
+            <div id="reports-file-view" class="receipt-box" style="background:#fafafa; font-weight:bold;"></div>
+            <button class="btn-danger" style="margin-top:15px; width:auto;" onclick="clearFile('reports')">Format System daily_report.txt</button>
+        </div>
+
+    </main>
+</div>
+
+<script>
+// =====================================================================
+// STATE ENGINE
+// =====================================================================
+let menu = JSON.parse(localStorage.getItem('menu_v4')) || {
+    "M1": { id: "M1", name: "Fried Rice", price: 4.50, category: "Food" },
+    "M2": { id: "M2", name: "Kuy Teav", price: 3.50, category: "Food" },
+    "M3": { id: "M3", name: "Iced Coffee", price: 1.80, category: "Drinks" },
+    "M4": { id: "M4", name: "Green Tea", price: 2.00, category: "Drinks" },
+    "M5": { id: "M5", name: "Ice Cream", price: 2.50, category: "Desserts" }
+};
+
+let tables = JSON.parse(localStorage.getItem('tables_v4')) || {};
+if(Object.keys(tables).length === 0){
+    for(let i=1; i<=10; i++) tables[i] = { number: i, isOccupied: false, currentOrder: null };
+}
+
+let coupons = { "WELCOME10": 0.10, "DISCOUNT20": 0.20, "PROMO5": 0.05 };
+let menuCategories = ["All", "Food", "Drinks", "Desserts"];
+let f1Filter = "All", f2Filter = "All";
+let selectedTableId = null;
+
+function switchFeature(featureIdx) {
+    document.querySelectorAll('.menu-item').forEach((el, i) => {
+        el.classList.toggle('active', i + 1 === featureIdx);
+    });
+    document.querySelectorAll('.feature-panel').forEach((el, i) => {
+        el.classList.toggle('active', i + 1 === featureIdx);
+    });
+    syncViews();
+}
+
+function saveState() {
+    localStorage.setItem('menu_v4', JSON.stringify(menu));
+    localStorage.setItem('tables_v4', JSON.stringify(tables));
+}
+
+// =====================================================================
+// UI RENDERERS (Fixes visual state bug)
+// =====================================================================
+function syncViews() {
+    renderSubTabs();
+    renderMenuTable();
+    renderTablesGrid();
+    populateDropdowns();
+    renderCoupons();
+    updateFileViews();
+}
+
+function renderSubTabs() {
+    const f1Container = document.getElementById('mgmt-sub-tabs');
+    const f2Container = document.getElementById('order-sub-tabs');
+    f1Container.innerHTML = ''; f2Container.innerHTML = '';
+
+    menuCategories.forEach(cat => {
+        let t1 = document.createElement('div');
+        t1.className = `sub-tab ${f1Filter === cat ? 'active' : ''}`;
+        t1.innerText = cat;
+        t1.onclick = () => { f1Filter = cat; renderSubTabs(); renderMenuTable(); };
+        f1Container.appendChild(t1);
+
+        let t2 = document.createElement('div');
+        t2.className = `sub-tab ${f2Filter === cat ? 'active' : ''}`;
+        t2.innerText = cat;
+        t2.onclick = () => { f2Filter = cat; renderSubTabs(); populateDropdowns(); };
+        f2Container.appendChild(t2);
+    });
+}
+
+function renderMenuTable() {
+    const tbody = document.getElementById('menu-tbody');
+    tbody.innerHTML = '';
+    for(let k in menu) {
+        if(f1Filter !== "All" && menu[k].category !== f1Filter) continue;
+        tbody.innerHTML += `<tr>
+            <td><b>${menu[k].id}</b> <small style="color:var(--gray)">[${menu[k].category}]</small></td>
+            <td>${menu[k].name}</td>
+            <td>$${menu[k].price.toFixed(2)}</td>
+            <td><button class="btn-danger" style="padding:3px 8px; font-size:11px; width:auto;" onclick="deleteMenuItem('${k}')">Delete</button></td>
+        </tr>`;
+    }
+}
+
+// FIX HERE: Properly re-allocating classes on grid updates
+function renderTablesGrid() {
+    const container = document.getElementById('tables-container');
+    container.innerHTML = '';
+    for(let i in tables) {
+        const btn = document.createElement('button');
+        
+        // Base color allocation: Occupied = Red, Vacant = Green
+        btn.className = `table-btn ${tables[i].isOccupied ? 'table-occupied' : 'table-free'}`;
+        
+        // Add blue outline focus wrapper ONLY if active table ID matches
+        if(Number(i) === Number(selectedTableId)) {
+            btn.classList.add('table-selected');
+        }
+        
+        btn.innerText = `Table ${i}`;
+        btn.onclick = () => selectOrderingTable(i);
+        container.appendChild(btn);
+    }
+}
+
+function populateDropdowns() {
+    const selectItems = document.getElementById('menu-item-select');
+    selectItems.innerHTML = '';
+    for(let k in menu) {
+        if(f2Filter !== "All" && menu[k].category !== f2Filter) continue;
+        selectItems.innerHTML += `<option value="${k}">[${menu[k].id}] ${menu[k].name} ($${menu[k].price.toFixed(2)})</option>`;
+    }
+
+    const selectTables = document.getElementById('coupon-table-select');
+    selectTables.innerHTML = '';
+    let occupiedCount = 0;
+    for(let i in tables) {
+        if(tables[i].isOccupied) {
+            selectTables.innerHTML += `<option value="${i}">Table #${i} (${tables[i].currentOrder.id})</option>`;
+            occupiedCount++;
+        }
+    }
+    if(occupiedCount === 0) selectTables.innerHTML = '<option value="">No Active Occupied Tables</option>';
+}
+
+function renderCoupons() {
+    const tbody = document.getElementById('coupon-tbody');
+    tbody.innerHTML = '';
+    for(let code in coupons) {
+        tbody.innerHTML += `<tr><td><code>${code}</code></td><td><b>${coupons[code]*100}% Off</b></td></tr>`;
+    }
+}
+
+// =====================================================================
+// CORE FUNCTIONS
+// =====================================================================
+function addMenuItem() {
+    const id = document.getElementById('new-item-id').value.trim().toUpperCase();
+    const name = document.getElementById('new-item-name').value.trim();
+    const price = parseFloat(document.getElementById('new-item-price').value);
+    const category = document.getElementById('new-item-category').value;
+
+    if(!id || !name || isNaN(price)) return alert("Please fill all valid fields.");
+    if(menu[id]) return alert("Item ID already exists!");
+
+    menu[id] = { id, name, price, category };
+    saveState(); syncViews();
+    document.getElementById('new-item-id').value = '';
+    document.getElementById('new-item-name').value = '';
+    document.getElementById('new-item-price').value = '';
+}
+
+function deleteMenuItem(key) {
+    delete menu[key];
+    saveState(); syncViews();
+}
+
+function selectOrderingTable(num) {
+    selectedTableId = num;
+    
+    // Switch state from green to occupied (red) upon click selection
+    if(!tables[num].isOccupied) {
+        tables[num].isOccupied = true;
+        tables[num].currentOrder = { id: 'ORD' + Date.now().toString().slice(-5), items: {}, discount: 0 };
+        saveState();
+    }
+    
+    // Instantly redraw standard color states and assign the unique .table-selected active class wrapper
+    renderTablesGrid();
+    
+    document.getElementById('order-actions').style.display = 'block';
+    document.getElementById('order-status-text').innerText = `Editing System Bill context for Table #${num} (${tables[num].currentOrder.id})`;
+    updateLiveReceipt();
+}
+
+function addItemToOrder() {
+    if(!selectedTableId) return;
+    const itemKey = document.getElementById('menu-item-select').value;
+    const qty = parseInt(document.getElementById('item-qty').value);
+    if(!itemKey || qty <= 0) return alert("Select item properties cleanly.");
+
+    tables[selectedTableId].currentOrder.items[itemKey] = (tables[selectedTableId].currentOrder.items[itemKey] || 0) + qty;
+    saveState(); updateLiveReceipt(); populateDropdowns();
+}
+
+function applyCouponToTable() {
+    const tNum = document.getElementById('coupon-table-select').value;
+    const code = document.getElementById('coupon-code-input').value.trim().toUpperCase();
+    if(!tNum || !tables[tNum]) return alert("No active target selected.");
+    if(coupons[code] === undefined) return alert("Coupon code not found.");
+
+    tables[tNum].currentOrder.discount = coupons[code];
+    alert(`Success! Calculated ${coupons[code]*100}% deduction applied onto Table #${tNum}.`);
+    saveState(); syncViews(); updateLiveReceipt();
+    document.getElementById('coupon-code-input').value = '';
+}
+
+function generateReceiptText(order, tableNum) {
+    let subtotal = 0, rows = '';
+    for(let k in order.items) {
+        const item = menu[k] || { name: "Archived Asset", price: 0 };
+        const qty = order.items[k];
+        subtotal += item.price * qty;
+        rows += `${item.name.padEnd(18)} x${qty.toString().padEnd(3)} $${(item.price*qty).toFixed(2).padStart(6)}\n`;
+    }
+    let disc = subtotal * order.discount;
+    return `===================================\n` +
+           `          RESTAURANT RECEIPT       \n` +
+           `===================================\n` +
+           `Date: ${new Date().toLocaleString()}\n` +
+           `Order ID: ${order.id.padEnd(15)} Table: ${tableNum}\n` +
+           `-----------------------------------\n` +
+           (rows || `[Empty Session Item States]\n`) +
+           `-----------------------------------\n` +
+           `Subtotal:                    $${subtotal.toFixed(2).padStart(6)}\n` +
+           (disc > 0 ? `Discount:                    -$${disc.toFixed(2).padStart(6)}\n` : '') +
+           `TOTAL:                       $${(subtotal - disc).toFixed(2).padStart(6)}\n` +
+           `===================================\n`;
+}
+
+function updateLiveReceipt() {
+    if(!selectedTableId) return;
+    document.getElementById('live-receipt-view').innerText = generateReceiptText(tables[selectedTableId].currentOrder, selectedTableId);
+}
+
+function checkoutTable() {
+    if(!selectedTableId) return;
+    const t = tables[selectedTableId];
+    if(Object.keys(t.currentOrder.items).length === 0) return alert("Cannot invoice an empty card database ledger.");
+
+    let receipt = generateReceiptText(t.currentOrder, selectedTableId);
+    let subtotal = 0;
+    for(let k in t.currentOrder.items) subtotal += (menu[k]?.price || 0) * t.currentOrder.items[k];
+    let net = subtotal * (1 - t.currentOrder.discount);
+
+    localStorage.setItem('f_orders_v4', (localStorage.getItem('f_orders_v4') || '') + receipt + "\n\n");
+    localStorage.setItem('f_report_v4', (localStorage.getItem('f_report_v4') || '') + `${new Date().toLocaleDateString()},${t.currentOrder.id},$${net.toFixed(2)}\n`);
+
+    // RESET LOGIC: Setting occupied states and selection variables to false/null loops back to standard green
+    t.isOccupied = false; 
+    t.currentOrder = null; 
+    selectedTableId = null;
+    
+    saveState(); 
+    syncViews();
+    
+    document.getElementById('order-actions').style.display = 'none';
+    document.getElementById('order-status-text').innerText = "Table cleared. Resetting color layout defaults.";
+}
+
+function updateFileViews() {
+    document.getElementById('orders-file-view').innerText = localStorage.getItem('f_orders_v4') || "[orders.txt is empty]";
+    document.getElementById('reports-file-view').innerText = localStorage.getItem('f_report_v4') || "[daily_report.txt is empty]";
+}
+
+function clearFile(type) {
+    localStorage.removeItem(type === 'orders' ? 'f_orders_v4' : 'f_report_v4');
+    updateFileViews();
+}
+
+syncViews();
+</script>
+</body>
+</html>
