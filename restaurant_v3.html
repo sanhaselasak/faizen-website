@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Restaurant Order Management System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #1A2744;
+  --navy2: #22345A;
+  --gold: #C8962E;
+  --gold-bg: #FDF5E4;
+  --gold-lite: #FAECC8;
+  --green: #10B981;
+  --green-bg: #ECFDF5;
+  --red: #EF4444;
+  --red-bg: #FEF2F2;
+  --cream: #F8F3ED;
+  --white: #FFFFFF;
+  --text: #1A1F36;
+  --muted: #6B7280;
+  --border: #E5E7EB;
+  --border2: #D1D5DB;
+  --r: 12px;
+  --r-sm: 8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;background-image:radial-gradient(circle,rgba(200,150,46,0.06) 1px,transparent 1px);background-size:22px 22px}
+
+/* HEADER */
+.site-header{background:var(--navy);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 16px rgba(0,0,0,0.25)}
+.brand{display:flex;align-items:center;gap:14px}
+.brand-logo{width:44px;height:44px;background:var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0}
+.brand-name{font-family:'Playfair Display',serif;font-size:1.25rem;color:var(--gold);letter-spacing:.3px}
+.brand-sub{font-size:.72rem;color:rgba(255,255,255,.45);margin-top:2px}
+.clock{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:var(--r-sm);padding:8px 16px;color:var(--gold);font-weight:700;font-size:.9rem;letter-spacing:2px;font-variant-numeric:tabular-nums}
+
+/* TOP NAV */
+.top-nav{background:var(--navy2);padding:0 28px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid rgba(255,255,255,.07)}
+.top-nav::-webkit-scrollbar{display:none}
+.nav-tab{padding:13px 20px;color:rgba(255,255,255,.45);font-size:.83rem;font-weight:600;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:color .2s,border-color .2s,background .2s;user-select:none;letter-spacing:.2px}
+.nav-tab:hover{color:rgba(255,255,255,.8)}
+.nav-tab.active{color:var(--gold);border-bottom-color:var(--gold);background:rgba(200,150,46,.07)}
+
+/* MAIN */
+.main{max-width:1100px;margin:0 auto;padding:28px 22px 60px}
+.feature-panel{display:none}
+.feature-panel.active{display:block;animation:up .25s ease}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* PAGE TITLE */
+.page-title{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--navy);margin-bottom:22px;display:flex;align-items:center;gap:10px}
+.page-title::after{content:'';flex:1;height:1.5px;background:linear-gradient(to right,var(--border),transparent);margin-left:10px}
+
+/* CARD */
+.card{background:var(--white);border-radius:var(--r);box-shadow:0 2px 10px rgba(0,0,0,.07);padding:22px 24px;margin-bottom:18px;border:1px solid rgba(0,0,0,.04)}
+.card-head{display:flex;align-items:center;gap:10px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.card-icon{width:34px;height:34px;background:var(--gold-bg);color:var(--gold);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.card-lbl{font-weight:700;font-size:.92rem;color:var(--navy)}
+
+/* PILLS */
+.pill-bar{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.pill{padding:5px 16px;border-radius:99px;font-size:.78rem;font-weight:700;cursor:pointer;background:var(--border);color:var(--muted);border:none;font-family:'Inter',sans-serif;transition:all .15s}
+.pill.active,.pill:hover{background:var(--navy);color:#fff}
+
+/* TABLE */
+.dtable{width:100%;border-collapse:collapse}
+.dtable th{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);padding:10px 12px;background:#F9FAFB;text-align:left;border-bottom:2px solid var(--border)}
+.dtable td{padding:13px 12px;border-bottom:1px solid var(--border);font-size:.9rem;vertical-align:middle}
+.dtable tr:last-child td{border-bottom:none}
+.dtable tr:hover td{background:#FFFCF5}
+.empty-row td{text-align:center;color:var(--muted);padding:32px;font-style:italic}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:.7rem;font-weight:700}
+.b-food{background:#FEF3C7;color:#92400E}
+.b-drinks{background:#DBEAFE;color:#1E40AF}
+.b-desserts{background:#FCE7F3;color:#9D174D}
+
+/* FORM */
+.fgrid{display:flex;gap:14px;flex-wrap:wrap}
+.fg{flex:1;min-width:130px}
+.flabel{display:block;font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
+.finput,.fselect{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:.9rem;font-family:'Inter',sans-serif;color:var(--text);background:var(--white);transition:border-color .2s,box-shadow .2s}
+.finput:focus,.fselect:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,150,46,.12)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border:none;border-radius:var(--r-sm);font-family:'Inter',sans-serif;font-weight:700;Padding:0.87rem;cursor:pointer;transition:opacity 0.15s,transform .1s}
+.btn:hover{opacity:.88}
+.btn:active{transform:scale(.97)}
+.btn-gold{background:var(--gold);color:#fff}
+.btn-navy{background:var(--navy);color:#fff}
+.btn-red{background:var(--red);color:#fff}
+.btn-green{background:var(--green);color:#fff}
+.btn-sm{padding:5px 12px;font-size:.76rem}
+/* STATUS SELECTOR */
+.status-sel{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.status-btn{flex:1;min-width:110px;padding:11px 10px;border-radius:var(--r-sm);font-size:.83rem;font-weight:700;cursor:pointer;border:2.5px solid transparent;font-family:'Inter',sans-serif;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:7px}
+.status-btn-avail{background:var(--green-bg);color:#065F46;border-color:var(--green)}
+.status-btn-occ{background:var(--red-bg);color:#7F1D1D;border-color:var(--red)}
+.status-btn-book{background:var(--gold-bg);color:#78350F;border-color:var(--gold)}
+.status-btn.is-active{box-shadow:0 0 0 3px rgba(0,0,0,.15);transform:scale(1.04)}
+.status-btn:not(.is-active){opacity:.6}
+.status-btn:hover{opacity:1}
+.btn-block{width:100%;margin-top:12px}
+
+/* FLOOR PLAN */
+.legend{display:flex;gap:18px;margin-bottom:18px;font-size:.8rem;font-weight:600;color:var(--muted)}
+.ld{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px}
+.ld-g{background:var(--green)}
+.ld-r{background:var(--red)}
+.ld-o{background:var(--gold)}
+.floor{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:18px;margin-bottom:22px}
+.tbl{width:90px;height:90px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s,box-shadow .2s;font-weight:700;border:3px solid transparent;margin:0 auto;position:relative}
+.tbl:hover{transform:scale(1.06)}
+.t-num{font-size:1.25rem;font-weight:700;line-height:1}
+.t-lbl{font-size:.6rem;font-weight:700;margin-top:3px;letter-spacing:.5px;text-transform:uppercase}
+.tbl-free{background:linear-gradient(145deg,#ECFDF5,#6EE7B7);border-color:var(--green);color:#064E3B;box-shadow:0 4px 14px rgba(16,185,129,.22)}
+.tbl-occ{background:linear-gradient(145deg,#FEF2F2,#FCA5A5);border-color:var(--red);color:#7F1D1D;box-shadow:0 4px 14px rgba(239,68,68,.22)}
+.tbl-booked{background:linear-gradient(145deg,#FEF3C7,#FBBF24);border-color:#F59E0B;color:#78350F;}
+.tbl-sel{transform:scale(1.12)!important;box-shadow:0 0 0 4px var(--gold),0 8px 24px rgba(200,150,46,.3)!important}
+
+/* STATUS BANNER */
+.s-banner{padding:12px 18px;border-radius:var(--r-sm);font-size:.88rem;font-weight:600;margin-bottom:18px;border:1.5px solid;display:flex;align-items:center;gap:10px}
+.s-idle{background:var(--green-bg);border-color:var(--green);color:#065F46}
+.s-active{background:#FFFBEB;border-color:#F59E0B;color:#78350F}
+.s-done{background:var(--green-bg);border-color:var(--green);color:#065F46}
+
+/* RECEIPT */
+.receipt{background:#FFFEF2;border:2px dashed #D97706;border-radius:var(--r-sm);font-family:'Courier New',monospace;padding:20px 22px;white-space:pre-wrap;font-size:.82rem;line-height:1.8;color:#2D3436;overflow-x:auto}
+
+/* LOG */
+.logbox{background:#0D1B2A;color:#7FDBCA;font-family:'Courier New',monospace;padding:20px;border-radius:var(--r-sm);white-space:pre-wrap;font-size:.78rem;line-height:1.9;max-height:420px;overflow-y:auto}
+.logbox::-webkit-scrollbar{width:5px}
+.logbox::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:3px}
+
+/* COUPONS */
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:4px}
+.coupon{position:relative;border:2px dashed var(--gold);border-radius:var(--r-sm);padding:22px 16px;text-align:center;background:linear-gradient(135deg,#FFFBEB,#FEF3C7);overflow:hidden}
+.coupon::before,.coupon::after{content:'';position:absolute;width:22px;height:22px;background:var(--cream);border-radius:50%;top:50%;transform:translateY(-50%)}
+.coupon::before{left:-11px}
+.coupon::after{right:-11px}
+.c-pct{font-family:'Playfair Display',serif;font-size:2.4rem;font-weight:700;color:var(--gold);line-height:1}
+.c-off{font-size:.68rem;font-weight:700;color:var(--muted);letter-spacing:1px;margin:2px 0 10px;text-transform:uppercase}
+.c-code{font-family:'Courier New',monospace;font-weight:700;font-size:.92rem;color:var(--navy);background:rgba(255,255,255,.7);padding:4px 10px;border-radius:4px;display:inline-block}
+
+/* REPORT STATS */
+.srow{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:14px;margin-bottom:18px}
+.scard{background:var(--white);border-radius:var(--r);padding:18px 20px;border:1px solid var(--border);box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.sval{font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:700;color:var(--navy);line-height:1}
+.sval-g{color:var(--green)}
+.sval-o{color:var(--gold)}
+.slbl{font-size:.72rem;font-weight:700;color:var(--muted);margin-top:6px;text-transform:uppercase;letter-spacing:.5px}
+
+/* TOAST */
+#toasts{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--navy);color:#fff;padding:12px 18px;border-radius:var(--r-sm);font-size:.87rem;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.2);display:flex;align-items:center;gap:10px;border-left:4px solid var(--gold);max-width:300px;animation:tin .3s ease,tout .3s ease 2.7s forwards}
+.toast.t-ok{border-left-color:var(--green)}
+.toast.t-err{border-left-color:var(--red)}
+@keyframes tin{from{transform:translateX(24px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes tout{from{opacity:1}to{opacity:0}}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:20px 0}
+
+@media(max-width:640px){
+  .site-header{padding:12px 14px}
+  .brand-name{font-size:1rem}
+  .top-nav{padding:0 10px}
+  .nav-tab{padding:11px 12px;font-size:.76rem}
+  .main{padding:18px 12px 40px}
+  .fgrid{flex-direction:column}
+  .tbl{width:76px;height:76px}
+  .floor{grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:12px}
+}
+</style>
+</head>
+<body>
+
+<div id="toasts"></div>
+
+<header class="site-header">
+  <div class="brand">
+    <div class="brand-logo">🍽</div>
+    <div>
+      <div class="brand-name">Restaurant Order System</div>
+      <div class="brand-sub">ក្រុមកូនទី ៥ — Assignment Core Features</div>
+    </div>
+  </div>
+  <div class="clock" id="clk">00:00:00</div>
+</header>
+
+<nav class="top-nav" id="t-nav-bar"></nav>
+
+<main class="main">
+
+  <div id="f1" class="feature-panel active">
+    <div class="page-title">📋 Menu Management — គ្រប់គ្រង Menu</div>
+    <div class="card">
+      <div class="pill-bar" id="p1"></div>
+      <div style="overflow-x:auto">
+        <table class="dtable">
+          <thead><tr><th>ID</th><th>Item Name</th><th>Category</th><th>Price</th><th>Action</th></tr></thead>
+          <tbody id="mtbody"></tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon">➕</div>
+        <span class="card-lbl">Add New Menu Item</span>
+      </div>
+      <div class="fgrid">
+        <div class="fg">
+          <label class="flabel">Category</label>
+          <select id="ni-cat" class="fselect"></select>
+        </div>
+        <div class="fg">
+          <label class="flabel">Item ID</label>
+          <input type="text" id="ni-id" placeholder="e.g. M6" class="finput">
+        </div>
+        <div class="fg">
+          <label class="flabel">Item Name</label>
+          <input type="text" id="ni-name" placeholder="e.g. Lok Lak" class="finput">
+        </div>
+        <div class="fg">
+          <label class="flabel">Price ($)</label>
+          <input type="number" id="ni-price" step="0.01" placeholder="0.00" class="finput">
+        </div>
+      </div>
+      <button class="btn btn-gold btn-block" onclick="addItem()">✚ Add Item to Menu</button>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon">📁</div>
+        <span class="card-lbl">Manage Categories — គ្រប់គ្រងប្រភេទម្ហូប</span>
+      </div>
+      <div class="fgrid">
+        <div class="fg">
+          <label class="flabel">New Category Name</label>
+          <input type="text" id="new-cat-name" placeholder="e.g. Soups" class="finput">
+        </div>
+        <div class="fg" style="max-width:200px;display:flex;align-items:flex-end">
+          <button class="btn btn-gold btn-block" style="margin-top:0" onclick="addCategory()">+ Add Category</button>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="fgrid">
+        <div class="fg">
+          <label class="flabel">Select Category to Remove</label>
+          <select id="rm-cat-sel" class="fselect"></select>
+        </div>
+        <div class="fg" style="max-width:200px;display:flex;align-items:flex-end">
+          <button class="btn btn-red btn-block" style="margin-top:0" onclick="removeCategory()">🗑 Delete Category</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="f2" class="feature-panel">
+    <div class="page-title">🪑 Orders & Billing — ទទួល Order</div>
+    <div class="card"><div class="card-head"><div class="card-icon">🏢</div><span class="card-lbl">Floor Management</span></div>
+<div class="fgrid"><div class="fg"><input id="floor-name" class="finput" placeholder="New Floor Name"></div>
+<div class="fg" style="max-width:180px"><button class="btn btn-gold btn-block" onclick="addFloor()">+ Add Floor</button></div>
+</div><div id="floor-tabs"></div></div>
+<div class="card">
+      <div class="card-head">
+        <div class="card-icon">🗺</div>
+        <span class="card-lbl">Restaurant Floor — Live Table Status</span>
+      </div>
+      <div class="legend">
+        <span><span class="ld ld-g"></span>Available</span>
+        <span><span class="ld ld-r"></span>Occupied</span>
+        <span><span class="ld ld-o"></span>Booked</span>
+      </div>
+      <div class="floor" id="floor"></div>
+    </div>
+
+    <div id="sbanner" class="s-banner s-idle">
+      <span>👆</span><span id="stxt">Select a table above to open or continue an order.</span>
+    </div>
+
+    <div id="tbl-status-panel" style="display:none">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon">🔄</div>
+          <span class="card-lbl">Table Status — ស្ថានភាពតុ</span>
+        </div>
+        <div class="status-sel" id="status-btns"></div>
+      </div>
+    </div>
+
+    <div id="oactions" style="display:none">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon">🍽</div>
+          <span class="card-lbl">Add Items to Order</span>
+        </div>
+        <div class="pill-bar" id="p2"></div>
+        <div class="fgrid">
+          <div class="fg">
+            <label class="flabel">Menu Item</label>
+            <select id="isel" class="fselect"></select>
+          </div>
+          <div class="fg" style="max-width:130px">
+            <label class="flabel">Quantity</label>
+            <input type="number" id="iqty" value="1" min="1" class="finput">
+          </div>
+          <div class="fg" style="max-width:160px;display:flex;align-items:flex-end">
+            <button class="btn btn-gold" style="width:100%;padding:10px 14px" onclick="addToOrder()">+ Add Item</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon">📝</div>
+          <span class="card-lbl">Modify Ordered Items — កែប្រែមុខម្ហូបកម្មង់</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="dtable">
+            <thead><tr><th>Item Name</th><th>Quantity</th><th>Actions</th></tr></thead>
+            <tbody id="otbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card"><div class="card-head"><div class="card-icon">🎟</div><span class="card-lbl">Apply Coupon</span></div>
+<div class="fgrid"><div class="fg"><input type="text" id="ccode-order" class="finput" placeholder="WELCOME10"></div>
+<div class="fg" style="max-width:150px"><button class="btn btn-gold" onclick="applyCouponCurrent()">Apply</button></div></div></div>
+<div class="card">
+        <div class="card-head">
+          <div class="card-icon">🧾</div>
+          <span class="card-lbl">Live Bill Preview</span>
+        </div>
+        <div id="rcpt" class="receipt"></div>
+        <button class="btn btn-red btn-block" onclick="checkout()">✅ Checkout &amp; Save Receipt</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="f3" class="feature-panel">
+    <div class="page-title">🎟 Discount & Coupon System — ប្រព័ន្ធ Discount</div>
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon">🎁</div>
+        <span class="card-lbl">Available Coupons</span>
+      </div>
+      <div class="cgrid" id="cgrid"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon">🎫</div>
+        <span class="card-lbl">Create New Coupon Code</span>
+      </div>
+      <div class="fgrid">
+        <div class="fg">
+          <label class="flabel">Coupon Code Name</label>
+          <input type="text" id="nc-code" placeholder="e.g. MIDTERM25" class="finput">
+        </div>
+        <div class="fg">
+          <label class="flabel">Discount Value (%)</label>
+          <input type="number" id="nc-pct" placeholder="e.g. 15" min="1" max="100" class="finput">
+        </div>
+      </div>
+      <button class="btn btn-gold btn-block" style="margin-top:14px" onclick="addCoupon()">+ Add Coupon</button>
+    </div>
+
+    </div>
+  </div>
+
+  <div id="f4" class="feature-panel">
+    <div class="page-title">📂 Transaction History — រក្សាប្រវត្តិ</div>
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon">💾</div>
+        <span class="card-lbl">orders.txt — All Saved Receipts</span>
+      </div>
+      <div id="ordlog" class="logbox"></div>
+      <div style="margin-top:14px">
+        <button class="btn btn-red btn-sm" onclick="clearF('orders')">🗑 Clear orders.txt</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="f5" class="feature-panel">
+    <div class="page-title">📊 Daily Report — របាយការណ៍</div>
+    <div class="srow">
+      <div class="scard"><div class="sval" id="r-cnt">0</div><div class="slbl">Total Orders</div></div>
+      <div class="scard"><div class="sval sval-o" id="r-rev">$0.00</div><div class="slbl">Total Revenue</div></div>
+      <div class="scard"><div class="sval sval-g" id="r-avg">$0.00</div><div class="slbl">Avg Order Value</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon">📈</div>
+        <span class="card-lbl">daily_report.txt — Revenue Log</span>
+      </div>
+      <div id="rptlog" class="logbox"></div>
+      <div style="margin-top:14px">
+        <button class="btn btn-red btn-sm" onclick="clearF('reports')">🗑 Clear daily_report.txt</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon">📊</div>
+        <span class="card-lbl">Revenue by Date — ប្រាក់ចំណូលប្រចាំថ្ងៃ</span>
+      </div>
+      <div style="position:relative;width:100%;overflow-x:auto">
+        <canvas id="reportChart" style="display:none;width:100%;min-height:220px"></canvas>
+        <p id="chart-empty" style="text-align:center;color:var(--muted);font-style:italic;padding:32px 0;display:block">No revenue data yet — checkout orders to see the chart.</p>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────
+let menu = JSON.parse(localStorage.getItem('menu_v5')) || {
+  M1:{id:'M1',name:'Fried Rice',price:4.50,category:'Food'},
+  M2:{id:'M2',name:'Kuy Teav',price:3.50,category:'Food'},
+  M3:{id:'M3',name:'Iced Coffee',price:1.80,category:'Drinks'},
+  M4:{id:'M4',name:'Green Tea',price:2.00,category:'Drinks'},
+  M5:{id:'M5',name:'Ice Cream',price:2.50,category:'Desserts'}
+};
+
+let tables = JSON.parse(localStorage.getItem('tables_v5')) || {};
+if(!Object.keys(tables).length) for(let i=1;i<=10;i++) tables[i]={number:i,isOccupied:false,currentOrder:null};
+
+// Load Dynamic Categories and Coupons from LocalStorage
+let cats = JSON.parse(localStorage.getItem('cats_v5')) || ['All','Food','Drinks','Desserts'];
+let coupons = JSON.parse(localStorage.getItem('coupons_v5')) || {WELCOME10:.10,DISCOUNT20:.20,PROMO5:.05};
+
+let f1f='All', f2f='All', selTbl=null;
+
+// ── CLOCK ──────────────────────────────────────────────────────────────
+function tick(){document.getElementById('clk').textContent=new Date().toLocaleTimeString('en-US',{hour12:false})}
+setInterval(tick,1000); tick();
+
+// ── TOAST ──────────────────────────────────────────────────────────────
+function toast(msg,type='info'){
+  const c=document.getElementById('toasts');
+  const d=document.createElement('div');
+  const ic={ok:'✅',err:'❌',info:'ℹ️'}[type]||'ℹ️';
+  d.className=`toast t-${type==='success'?'ok':type==='error'?'err':'info'}`;
+  d.innerHTML=`<span>${ic}</span><span>${msg}</span>`;
+  c.appendChild(d);
+  setTimeout(()=>d.remove(),3200);
+}
+
+// ── NAV GENERATION ─────────────────────────────────────────────────────
+function renderNavbar(){
+  const navBar = document.getElementById('t-nav-bar');
+  if(!navBar) return;
+  navBar.innerHTML = `
+    <div class="nav-tab active" onclick="go(1)">📋 គ្រប់គ្រង Menu</div>
+    <div class="nav-tab" onclick="go(2)">🪑 Order / គណនាថ្លៃ</div>
+    <div class="nav-tab" onclick="go(3)">🎟 Discount / Coupon</div>
+    <div class="nav-tab" onclick="go(4)">📂 Transaction History</div>
+    <div class="nav-tab" onclick="go(5)">📊 Daily Report</div>
+  `;
+}
+
+function go(n){
+  document.querySelectorAll('.nav-tab').forEach((e,i)=>e.classList.toggle('active',i+1===n));
+  document.querySelectorAll('.feature-panel').forEach((e,i)=>e.classList.toggle('active',i+1===n));
+  sync();
+}
+
+function save(){
+  localStorage.setItem('menu_v5',JSON.stringify(menu));
+  localStorage.setItem('tables_v5',JSON.stringify(tables));
+  localStorage.setItem('cats_v5',JSON.stringify(cats));
+  localStorage.setItem('coupons_v5',JSON.stringify(coupons));
+}
+
+// ── SYNC ───────────────────────────────────────────────────────────────
+function sync(){
+  pills();
+  menuTable();
+  floorGrid();
+  dropdowns();
+  couponCards();
+  fileLogs();
+  reportStats();
+}
+
+// ── PILLS ──────────────────────────────────────────────────────────────
+function pills(){
+  const p1=document.getElementById('p1');
+  const p2=document.getElementById('p2');
+  if(!p1||!p2) return;
+  [p1,p2].forEach((el,idx)=>{
+    el.innerHTML='';
+    cats.forEach(c=>{
+      const b=document.createElement('button');
+      b.className=`pill ${(idx?f2f:f1f)===c?'active':''}`;
+      b.textContent=c;
+      b.onclick=idx
+        ?()=>{f2f=c;pills();dropdowns();}
+        :()=>{f1f=c;pills();menuTable();};
+      el.appendChild(b);
+    });
+  });
+}
+
+// ── MENU TABLE ─────────────────────────────────────────────────────────
+function badge(cat){
+  const m={Food:'b-food',Drinks:'b-drinks',Desserts:'b-desserts'};
+  return `<span class="badge ${m[cat]||''}" style="${!m[cat]?'background:#E5E7EB;color:#374151':''}">${cat}</span>`;
+}
+function menuTable(){
+  const tb=document.getElementById('mtbody');
+  if(!tb) return;
+  tb.innerHTML='';
+  let n=0;
+  for(let k in menu){
+    if(f1f!=='All'&&menu[k].category!==f1f) continue;
+    n++;
+    tb.innerHTML+=`<tr>
+      <td><strong>${menu[k].id}</strong></td>
+      <td>${menu[k].name}</td>
+      <td>${badge(menu[k].category)}</td>
+      <td><strong>$${menu[k].price.toFixed(2)}</strong></td>
+      <td><button class="btn btn-red btn-sm" onclick="delItem('${k}')">Delete</button></td>
+    </tr>`;
+  }
+  if(!n) tb.innerHTML='<tr class="empty-row"><td colspan="5">No items in this category.</td></tr>';
+}
+
+// ── FLOOR GRID ─────────────────────────────────────────────────────────
+function floorGrid(){
+  const el=document.getElementById('floor');
+  if(!el) return;
+  el.innerHTML='';
+  for(let i in tables){
+    const t=tables[i];
+    // Determine effective status
+    const status = t.status || (t.isOccupied ? 'occupied' : 'available');
+    const isSel=Number(i)===Number(selTbl);
+    const d=document.createElement('div');
+    let cls='tbl-free', lbl='Free';
+    if(status==='occupied'){cls='tbl-occ';lbl='Occupied';}
+    else if(status==='booked'){cls='tbl-booked';lbl='Booked';}
+    d.className=`tbl ${cls}${isSel?' tbl-sel':''}`;
+    d.innerHTML=`<span class="t-num">${i}</span><span class="t-lbl">${lbl}</span>`;
+    d.onclick=()=>selTable(i);
+    el.appendChild(d);
+  }
+}
+
+// ── DROPDOWNS ──────────────────────────────────────────────────────────
+function dropdowns(){
+  const nicat = document.getElementById('ni-cat');
+  if(nicat){
+    nicat.innerHTML = '';
+    cats.forEach(c => { if(c !== 'All') nicat.innerHTML += `<option value="${c}">${c}</option>`; });
+  }
+
+  const rmcat = document.getElementById('rm-cat-sel');
+  if(rmcat){
+    rmcat.innerHTML = '';
+    cats.forEach(c => { if(c !== 'All') rmcat.innerHTML += `<option value="${c}">${c}</option>`; });
+  }
+
+  const si=document.getElementById('isel');
+  if(si){
+    si.innerHTML='';
+    for(let k in menu){
+      if(f2f!=='All'&&menu[k].category!==f2f) continue;
+      si.innerHTML+=`<option value="${k}">[${menu[k].id}] ${menu[k].name} — $${menu[k].price.toFixed(2)}</option>`;
+    }
+  }
+  const st=document.getElementById('ctsel');
+  if(st){
+    st.innerHTML='';
+    let n=0;
+    for(let i in tables){
+      if(tables[i].isOccupied){
+        st.innerHTML+=`<option value="${i}">Table #${i} (${tables[i].currentOrder.id})</option>`;
+        n++;
+      }
+    }
+    if(!n) st.innerHTML='<option value="">— No occupied tables —</option>';
+  }
+}
+
+// ── COUPON CARDS ───────────────────────────────────────────────────────
+function couponCards(){
+  const el=document.getElementById('cgrid');
+  if(!el) return;
+  el.innerHTML='';
+  for(let c in coupons){
+    el.innerHTML+=`<div class="coupon">
+      <div class="c-pct">${(coupons[c]*100).toFixed(0)}%</div>
+      <div class="c-off">Discount Off</div>
+      <div class="c-code">${c}</div>
+      <div style="margin-top:12px">
+         <button class="btn btn-red btn-sm" style="padding:3px 8px; font-size:0.7rem" onclick="deleteCoupon('${c}')">Delete</button>
+      </div>
+    </div>`;
+  }
+}
+
+// ── FILE LOGS & REPORT STATS ───────────────────────────────────────────
+function fileLogs(){
+  const ol=document.getElementById('ordlog');
+  const rl=document.getElementById('rptlog');
+  if(ol) ol.textContent=localStorage.getItem('f_ord')||'// orders.txt is empty — no transactions yet.';
+  if(rl) rl.textContent=localStorage.getItem('f_rpt')||'// daily_report.txt is empty — checkout an order to generate data.';
+}
+function reportStats(){
+  const data=localStorage.getItem('f_rpt')||'';
+  const lines=data.trim().split('\n').filter(l=>l.trim());
+  let total=0,count=0;
+  lines.forEach(l=>{
+    const p=l.split('|');
+    if(p.length>=3){const a=parseFloat(p[2].replace('$','').trim());if(!isNaN(a)){total+=a;count++;}}
+  });
+  const e1=document.getElementById('r-cnt');
+  const e2=document.getElementById('r-rev');
+  const e3=document.getElementById('r-avg');
+  if(e1) e1.textContent=count;
+  if(e2) e2.textContent=`$${total.toFixed(2)}`;
+  if(e3) e3.textContent=`$${count?(total/count).toFixed(2):'0.00'}`;
+  drawReportChart();
+}
+
+function drawReportChart(){
+  const canvas=document.getElementById('reportChart');
+  const empty=document.getElementById('chart-empty');
+  if(!canvas) return;
+  const data=localStorage.getItem('f_rpt')||'';
+  const lines=data.trim().split('\n').filter(l=>l.trim());
+  const byDate={};
+  lines.forEach(l=>{
+    const p=l.split('|');
+    if(p.length>=3){const d=p[0].trim();const a=parseFloat(p[2].replace('$','').trim());if(!isNaN(a)) byDate[d]=(byDate[d]||0)+a;}
+  });
+  const entries=Object.entries(byDate);
+  if(!entries.length){
+    canvas.style.display='none';
+    if(empty) empty.style.display='block';
+    return;
+  }
+  canvas.style.display='block';
+  if(empty) empty.style.display='none';
+
+  // Size canvas to container
+  const W=canvas.parentElement.offsetWidth||660;
+  canvas.width=W; canvas.height=240;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,240);
+
+  const maxVal=Math.max(...entries.map(e=>e[1]))||1;
+  const pad={top:28,bottom:52,left:62,right:18};
+  const cW=W-pad.left-pad.right;
+  const cH=240-pad.top-pad.bottom;
+  const barW=Math.min(52,cW/entries.length*0.55);
+  const gap=cW/entries.length;
+
+  // Grid lines & Y labels
+  const steps=5;
+  for(let i=0;i<=steps;i++){
+    const y=pad.top+(cH/steps)*i;
+    const val=maxVal*(1-i/steps);
+    ctx.strokeStyle='#E5E7EB'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(W-pad.right,y); ctx.stroke();
+    ctx.fillStyle='#9CA3AF'; ctx.font='10px Inter,sans-serif'; ctx.textAlign='right';
+    ctx.fillText('$'+val.toFixed(0),pad.left-8,y+4);
+  }
+
+  // Bars
+  entries.forEach(([date,val],idx)=>{
+    const barH=Math.max(4,(val/maxVal)*cH);
+    const x=pad.left+gap*idx+(gap-barW)/2;
+    const y=pad.top+cH-barH;
+    const grad=ctx.createLinearGradient(x,y,x,y+barH);
+    grad.addColorStop(0,'#C8962E'); grad.addColorStop(1,'rgba(200,150,46,0.45)');
+    ctx.fillStyle=grad;
+    // Rounded top bar
+    const r=Math.min(5,barW/3);
+    ctx.beginPath();
+    ctx.moveTo(x+r,y); ctx.lineTo(x+barW-r,y);
+    ctx.quadraticCurveTo(x+barW,y,x+barW,y+r);
+    ctx.lineTo(x+barW,y+barH); ctx.lineTo(x,y+barH);
+    ctx.lineTo(x,y+r);
+    ctx.quadraticCurveTo(x,y,x+r,y);
+    ctx.closePath(); ctx.fill();
+
+    // Value label above bar
+    ctx.fillStyle='#1A2744'; ctx.font='bold 10px Inter,sans-serif'; ctx.textAlign='center';
+    ctx.fillText('$'+val.toFixed(2),x+barW/2,y-6);
+
+    // Date label
+    const parts=date.split('/');
+    const short=(parts[0]||'')+'/'+(parts[1]||'');
+    ctx.fillStyle='#6B7280'; ctx.font='9px Inter,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(short,x+barW/2,240-pad.bottom+16);
+  });
+
+  // X-axis line
+  ctx.strokeStyle='#D1D5DB'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(pad.left,pad.top+cH); ctx.lineTo(W-pad.right,pad.top+cH); ctx.stroke();
+}
+
+// ── DYNAMIC CATEGORY OPERATIONS ────────────────────────────────────────
+function addCategory(){
+  const nm = document.getElementById('new-cat-name').value.trim();
+  if(!nm){ toast('Category name cannot be empty.','error'); return; }
+  if(cats.includes(nm)){ toast('Category already exists.','error'); return; }
+  cats.push(nm);
+  save(); sync();
+  document.getElementById('new-cat-name').value = '';
+  toast(`Category "${nm}" added!`, 'success');
+}
+
+function removeCategory(){
+  const nm = document.getElementById('rm-cat-sel').value;
+  if(!nm){ toast('No dynamic category found to remove.','error'); return; }
+  if(!confirm(`Delete category "${nm}"? Items inside will fallback to category "Food".`)) return;
+  
+  cats = cats.filter(c => c !== nm);
+  for(let k in menu){
+    if(menu[k].category === nm) menu[k].category = 'Food';
+  }
+  if(f1f === nm) f1f = 'All';
+  if(f2f === nm) f2f = 'All';
+  save(); sync();
+  toast(`Category "${nm}" deleted.`, 'success');
+}
+
+// ── DYNAMIC COUPON OPERATIONS ──────────────────────────────────────────
+function addCoupon(){
+  const code = document.getElementById('nc-code').value.trim().toUpperCase();
+  const pct = parseFloat(document.getElementById('nc-pct').value);
+  if(!code || isNaN(pct) || pct <= 0 || pct > 100){ toast('Provide a valid code name and percentage.','error'); return; }
+  if(coupons[code]){ toast('This coupon code matches an existing code.','error'); return; }
+  
+  coupons[code] = pct / 100;
+  save(); sync();
+  document.getElementById('nc-code').value = '';
+  document.getElementById('nc-pct').value = '';
+  toast(`Coupon "${code}" saved successfully!`, 'success');
+}
+
+function deleteCoupon(code){
+  if(!confirm(`Are you sure you want to remove the coupon code "${code}"?`)) return;
+  delete coupons[code];
+  save(); sync();
+  toast(`Coupon "${code}" removed.`, 'success');
+}
+
+// ── CORE ACTIONS ───────────────────────────────────────────────────────
+function addItem(){
+  const id=document.getElementById('ni-id').value.trim().toUpperCase();
+  const nm=document.getElementById('ni-name').value.trim();
+  const pr=parseFloat(document.getElementById('ni-price').value);
+  const cat=document.getElementById('ni-cat').value;
+  if(!id||!nm||isNaN(pr)||pr<=0){toast('Please fill all fields correctly.','error');return;}
+  if(menu[id]){toast(`ID "${id}" already exists!`,'error');return;}
+  menu[id]={id,name:nm,price:pr,category:cat};
+  save();sync();
+  document.getElementById('ni-id').value='';
+  document.getElementById('ni-name').value='';
+  document.getElementById('ni-price').value='';
+  toast(`"${nm}" added to menu!`,'success');
+}
+
+function delItem(k){
+  if(!confirm(`Remove "${menu[k].name}" from menu?`)) return;
+  const n=menu[k].name;
+  delete menu[k];
+  save();sync();
+  toast(`"${n}" removed.`,'success');
+}
+
+function selTable(num){
+  selTbl=num;
+  const t=tables[num];
+
+  // Initialize status if not yet set
+  if(!t.status) t.status = t.isOccupied ? 'occupied' : 'available';
+
+  floorGrid();
+
+  // Show & render status panel
+  const sp=document.getElementById('tbl-status-panel');
+  if(sp) sp.style.display='block';
+  renderStatusButtons(num);
+
+  const bn=document.getElementById('sbanner');
+  bn.className='s-banner s-active';
+  document.getElementById('stxt').textContent=`🪑 Table #${num} — Status: ${t.status.charAt(0).toUpperCase()+t.status.slice(1)}${t.isOccupied&&t.currentOrder?' — Order: '+t.currentOrder.id:''}`;
+
+  if(t.status==='occupied'){
+    if(!t.isOccupied){
+      t.isOccupied=true;
+      t.currentOrder={id:'ORD'+Date.now().toString().slice(-5),items:{},discount:0};
+      save();
+    }
+    document.getElementById('oactions').style.display='block';
+    liveReceipt();
+  } else {
+    document.getElementById('oactions').style.display='none';
+  }
+}
+
+function renderStatusButtons(num){
+  const el=document.getElementById('status-btns');
+  if(!el) return;
+  const status=tables[num]?.status||(tables[num]?.isOccupied?'occupied':'available');
+  const opts=[
+    {key:'available',label:'🟢 Available',cls:'status-btn-avail'},
+    {key:'occupied', label:'🔴 Occupied', cls:'status-btn-occ'},
+    {key:'booked',   label:'🟡 Booked',   cls:'status-btn-book'}
+  ];
+  el.innerHTML=opts.map(o=>`<button class="status-btn ${o.cls}${status===o.key?' is-active':''}" onclick="changeTableStatus('${o.key}')">${o.label}</button>`).join('');
+}
+
+function changeTableStatus(newStatus){
+  if(!selTbl) return;
+  const t=tables[selTbl];
+  const hasItems=t.isOccupied&&t.currentOrder&&Object.keys(t.currentOrder.items).length>0;
+
+  if(newStatus==='occupied'){
+    if(!t.isOccupied){
+      t.isOccupied=true;
+      t.currentOrder={id:'ORD'+Date.now().toString().slice(-5),items:{},discount:0};
+    }
+    t.status='occupied';
+    document.getElementById('oactions').style.display='block';
+    liveReceipt();
+  } else {
+    if(hasItems&&!confirm(`Table #${selTbl} has active order items. Changing status will clear them. Continue?`)) return;
+    t.isOccupied=false;
+    t.currentOrder=null;
+    t.status=newStatus;
+    document.getElementById('oactions').style.display='none';
+  }
+
+  save(); floorGrid(); renderStatusButtons(selTbl);
+  const bn=document.getElementById('sbanner');
+  bn.className='s-banner s-active';
+  document.getElementById('stxt').textContent=`🪑 Table #${selTbl} — Status: ${newStatus.charAt(0).toUpperCase()+newStatus.slice(1)}${t.isOccupied&&t.currentOrder?' — Order: '+t.currentOrder.id:''}`;
+  toast(`Table #${selTbl} → ${newStatus.charAt(0).toUpperCase()+newStatus.slice(1)}`,'success');
+}
+
+function addToOrder(){
+  if(!selTbl) return;
+  const k=document.getElementById('isel').value;
+  const q=parseInt(document.getElementById('iqty').value);
+  if(!k||q<=0){toast('Select an item and valid quantity.','error');return;}
+  tables[selTbl].currentOrder.items[k]=(tables[selTbl].currentOrder.items[k]||0)+q;
+  save();liveReceipt();dropdowns();
+  toast(`Added ${q}× ${menu[k].name}!`,'success');
+}
+
+// ── EDIT & REMOVE ORDER ITEMS OPERATIONS ───────────────────────────────
+function editOrderItem(k){
+  if(!selTbl) return;
+  const oldQty = tables[selTbl].currentOrder.items[k];
+  const input = prompt(`Edit item quantity for "${menu[k]?.name || 'Item'}":`, oldQty);
+  if(input === null) return;
+  const newQty = parseInt(input);
+  if(isNaN(newQty) || newQty <= 0){ toast('Please input a valid quantity above 0.', 'error'); return; }
+  
+  tables[selTbl].currentOrder.items[k] = newQty;
+  save(); liveReceipt();
+  toast('Order item updated!', 'success');
+}
+
+function removeOrderItem(k){
+  if(!selTbl) return;
+  if(!confirm(`Remove all "${menu[k]?.name || 'item'}" from the active table order?`)) return;
+  
+  delete tables[selTbl].currentOrder.items[k];
+  save(); liveReceipt();
+  toast('Item removed from order selection.', 'success');
+}
+
+function applyCoupon(){
+  const tn=document.getElementById('ctsel').value;
+  const code=document.getElementById('ccode').value.trim().toUpperCase();
+  if(!tn||!tables[tn]){toast('No occupied table selected.','error');return;}
+  if(coupons[code]===undefined){toast('Invalid coupon code.','error');return;}
+  tables[tn].currentOrder.discount=coupons[code];
+  save();sync();liveReceipt();
+  document.getElementById('ccode').value='';
+  toast(`${coupons[code]*100}% discount applied to Table #${tn}!`,'success');
+}
+
+function receipt(order,tn){
+  let sub=0,rows='';
+  for(let k in order.items){
+    const it=menu[k]||{name:'Archived Item',price:0};
+    const q=order.items[k];
+    sub+=it.price*q;
+    rows+=`  ${it.name.padEnd(16)} x${String(q).padEnd(3)} $${(it.price*q).toFixed(2).padStart(6)}\n`;
+  }
+  const disc=sub*order.discount;
+  return(
+    `  ====================================\n`+
+    `        🍽  RESTAURANT RECEIPT       \n`+
+    `  ====================================\n`+
+    `  Date:     ${new Date().toLocaleString()}\n`+
+    `  Order:    ${order.id}      Table: #${tn}\n`+
+    `  ------------------------------------\n`+
+    (rows||`    [ No items added yet ]\n`)+
+    `  ------------------------------------\n`+
+    `  Subtotal:               $${sub.toFixed(2).padStart(7)}\n`+
+    (disc>0?`  Discount (${(order.discount*100).toFixed(0)}%):        -$${disc.toFixed(2).padStart(6)}\n`:'')+
+    `  TOTAL:                  $${(sub-disc).toFixed(2).padStart(7)}\n`+
+    `  ====================================\n`+
+    `    Thank you for dining with us!  \n`+
+    `  ====================================\n`
+  );
+}
+
+function liveReceipt(){
+  if(!selTbl) return;
+  const el=document.getElementById('rcpt');
+  if(el) el.textContent=receipt(tables[selTbl].currentOrder,selTbl);
+
+  // Synchronize interactive order modification list
+  const otb = document.getElementById('otbody');
+  if(otb){
+    otb.innerHTML = '';
+    let itemsFound = 0;
+    const items = tables[selTbl].currentOrder.items;
+    for(let k in items){
+      itemsFound++;
+      const it = menu[k] || {name: 'Archived Item', price: 0};
+      otb.innerHTML += `<tr>
+        <td><strong>${it.name}</strong></td>
+        <td>${items[k]}</td>
+        <td>
+          <button class="btn btn-gold btn-sm" onclick="editOrderItem('${k}')">Edit Qty</button>
+          <button class="btn btn-red btn-sm" onclick="removeOrderItem('${k}')">Remove</button>
+        </td>
+      </tr>`;
+    }
+    if(!itemsFound) otb.innerHTML = '<tr class="empty-row"><td colspan="3">No items actively in this table order.</td></tr>';
+  }
+}
+
+function checkout(){
+  if(!selTbl) return;
+  const t=tables[selTbl];
+  if(!Object.keys(t.currentOrder.items).length){toast('Cannot checkout an empty order.','error');return;}
+  const txt=receipt(t.currentOrder,selTbl);
+  let sub=0;
+  for(let k in t.currentOrder.items) sub+=(menu[k]?.price||0)*t.currentOrder.items[k];
+  const net=sub*(1-t.currentOrder.discount);
+  localStorage.setItem('f_ord',(localStorage.getItem('f_ord')||'')+txt+'\n\n');
+  localStorage.setItem('f_rpt',(localStorage.getItem('f_rpt')||'')+`${new Date().toLocaleDateString()}  |  ${t.currentOrder.id}  |  $${net.toFixed(2)}\n`);
+  const tn=selTbl;
+  t.isOccupied=false;t.currentOrder=null;selTbl=null;
+  save();sync();
+  document.getElementById('oactions').style.display='none';
+  const bn=document.getElementById('sbanner');
+  bn.className='s-banner s-done';
+  document.getElementById('stxt').textContent=`✅ Table #${tn} checked out. Now available.`;
+  toast(`Table #${tn} checkout complete!`,'success');
+}
+
+function clearF(type){
+  const key=type==='orders'?'f_ord':'f_rpt';
+  const nm=type==='orders'?'orders.txt':'daily_report.txt';
+  if(!confirm(`Clear all data in ${nm}?`)) return;
+  localStorage.removeItem(key);
+  fileLogs();reportStats();
+  toast(`${nm} cleared.`,'success');
+}
+
+renderNavbar();
+sync();
+
+// v6 floor management
+let floors=JSON.parse(localStorage.getItem('floors_v6'))||{1:{name:'Floor 1',tables:tables}};
+let selectedFloor='1';
+function saveFloors(){localStorage.setItem('floors_v6',JSON.stringify(floors));}
+function renderFloorTabs(){let el=document.getElementById('floor-tabs'); if(!el)return; el.innerHTML=''; Object.keys(floors).forEach(id=>{el.innerHTML+=`<button class="pill ${id==selectedFloor?'active':''}" onclick="selectedFloor='${id}';tables=floors['${id}'].tables;floorGrid();renderFloorTabs();">${floors[id].name}</button>`});}
+function addFloor(){let n=document.getElementById('floor-name').value.trim(); if(!n)return; let id=Date.now()+''; let t={}; for(let i=1;i<=10;i++) t[i]={number:i,status:'Available',isOccupied:false,currentOrder:null}; floors[id]={name:n,tables:t}; saveFloors(); renderFloorTabs();}
+function applyCouponCurrent(){if(!selTbl)return; let code=(document.getElementById('ccode-order').value||'').trim().toUpperCase(); if(coupons[code]===undefined){toast('Invalid coupon','error');return;} tables[selTbl].currentOrder.discount=coupons[code]; save(); liveReceipt(); toast('Coupon applied','success');}
+const oldSync=sync; sync=function(){oldSync(); renderFloorTabs(); saveFloors();}
+</script>
+</body>
+</html>
